@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/university_db
+    username: university_app
+    password: university_password
+
+  jpa:
+    open-in-view: false
+
+    hibernate:
+      ddl-auto: validate
+
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+jwt:
+  secret: ymr2v5bqQtIaC+0MxkMKSHCNZsMYlYOXoTQWYLGDMMTn9FFXmvHm9r6dfX8LsVI+GwQpD8FwIK/J4syCHzyEVg==
+  expirationMS: 3600000
