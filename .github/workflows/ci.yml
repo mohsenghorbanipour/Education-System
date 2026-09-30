@@ -81,7 +81,7 @@ jobs:
     needs: build-and-test
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 90
     concurrency:
       group: education-system-deployment
       cancel-in-progress: false
