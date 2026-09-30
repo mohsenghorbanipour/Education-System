@@ -550,6 +550,21 @@ java -jar target/education-system-0.0.1-SNAPSHOT.jar
 
 The executable JAR uses the same environment variables as the Maven run command.
 
+## CI/CD
+
+[GitHub Actions](.github/workflows/ci.yml) builds and tests pushes and pull
+requests targeting `main`, using Java 21 and a temporary PostgreSQL 17 service.
+Pushing a `v*` release tag also deploys that run's tested JAR to the configured
+Ubuntu server. Release commits must be reachable from `main`.
+
+The deployment uses a dedicated SSH account, verified host keys, and a
+root-owned helper with a limited sudo rule. It verifies the uploaded checksum,
+restarts the systemd service, and checks application health. On startup failure
+it attempts to restore the previous JAR; database migrations are not reverted.
+
+Follow the [deployment guide](deploy/README.md) to install the server helper,
+configure the four Actions secrets, and publish a release.
+
 ## Current scope
 
 This repository provides the backend API. Role and permission data are seeded in the database; dedicated management endpoints for them are not implemented. Some seeded permissions represent future operations and do not imply an existing endpoint. There is no frontend, generated Swagger/OpenAPI UI, refresh-token flow, or password-change endpoint in the current codebase.

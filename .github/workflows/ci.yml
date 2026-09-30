@@ -1,8 +1,9 @@
-name: Education System CI
+name: Education System CI/CD
 
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -12,7 +13,7 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   build-and-test:
@@ -45,6 +46,14 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 0
+
+      - name: Verify release commit belongs to main
+        if: startsWith(github.ref, 'refs/tags/')
+        run: git merge-base --is-ancestor HEAD origin/main
+
+      - name: Test deployment helper
+        run: python3 -m unittest discover -s deploy/tests -v
 
       - name: Set up Java 21
         uses: actions/setup-java@v6
@@ -66,3 +75,77 @@ jobs:
           path: target/education-system-*.jar
           if-no-files-found: error
           retention-days: 7
+
+  deploy:
+    name: Deploy release
+    needs: build-and-test
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    concurrency:
+      group: education-system-deployment
+      cancel-in-progress: false
+
+    steps:
+      - name: Download the tested JAR
+        uses: actions/download-artifact@v8
+        with:
+          name: education-system-${{ github.sha }}
+          path: release
+
+      - name: Configure SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9.-]*$ ]]
+          [[ "$DEPLOY_USER" == "deploy" ]]
+          [[ -n "$DEPLOY_SSH_KEY" && -n "$DEPLOY_KNOWN_HOSTS" ]]
+          umask 077
+          mkdir -p "$RUNNER_TEMP/education-ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' > "$RUNNER_TEMP/education-ssh/key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/education-ssh/known_hosts"
+          ssh-keygen -y -P "" -f "$RUNNER_TEMP/education-ssh/key" > /dev/null
+          ssh-keygen -F "$DEPLOY_HOST" -f "$RUNNER_TEMP/education-ssh/known_hosts" > /dev/null
+          cat > "$RUNNER_TEMP/education-ssh/config" <<EOF
+          Host education-target
+            HostName $DEPLOY_HOST
+            User $DEPLOY_USER
+            Port 22
+            IdentityFile $RUNNER_TEMP/education-ssh/key
+            UserKnownHostsFile $RUNNER_TEMP/education-ssh/known_hosts
+            GlobalKnownHostsFile /dev/null
+            StrictHostKeyChecking yes
+            IdentitiesOnly yes
+            BatchMode yes
+            ConnectTimeout 15
+            ServerAliveInterval 15
+            ServerAliveCountMax 4
+            RequestTTY no
+          EOF
+
+      - name: Upload and deploy
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_SHA" =~ ^[0-9a-f]{40}$ ]]
+          shopt -s nullglob
+          jars=(release/*.jar)
+          [[ "${#jars[@]}" -eq 1 ]]
+          checksum=$(sha256sum "${jars[0]}" | cut -d ' ' -f 1)
+          ssh -F "$RUNNER_TEMP/education-ssh/config" education-target \
+            'test "$(id -un)" = deploy && test -w /home/deploy/incoming'
+          scp -F "$RUNNER_TEMP/education-ssh/config" "${jars[0]}" \
+            "education-target:/home/deploy/incoming/$GITHUB_SHA.jar"
+          ssh -F "$RUNNER_TEMP/education-ssh/config" education-target \
+            "sudo -n /usr/local/sbin/education-deploy $GITHUB_SHA $checksum"
+          ssh -F "$RUNNER_TEMP/education-ssh/config" education-target \
+            "rm -f -- /home/deploy/incoming/$GITHUB_SHA.jar"
+
+      - name: Remove temporary SSH credentials
+        if: always()
+        run: rm -rf -- "$RUNNER_TEMP/education-ssh"
