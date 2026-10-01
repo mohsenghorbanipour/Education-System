@@ -1,5 +1,6 @@
 package com.edu.com.major.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.annotations.CheckPermission;
 import com.edu.com.common.response.ApiResponse;
 import com.edu.com.major.dto.MajorDto;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Majors")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/majors")

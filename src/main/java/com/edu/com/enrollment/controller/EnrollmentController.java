@@ -1,5 +1,7 @@
 package com.edu.com.enrollment.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.annotations.CheckPermission;
 import com.edu.com.common.filter.JwtFilter;
 import com.edu.com.common.response.ApiResponse;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Enrollments")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/enrollments")
@@ -112,7 +115,7 @@ public class EnrollmentController {
     @GetMapping("/me")
     @CheckPermission("ENROLLMENT_READ_SELF")
     public ResponseEntity<ApiResponse<List<EnrollmentDto>>> getOwnEnrollments(
-            @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
             @RequestParam(name = "semesterId", required = false) UUID semesterId,
             @RequestParam(name = "page", defaultValue = "0") @Min(0) Integer page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) Integer size
@@ -128,7 +131,7 @@ public class EnrollmentController {
     @GetMapping("/me/{enrollmentId}")
     @CheckPermission("ENROLLMENT_READ_SELF")
     public ResponseEntity<ApiResponse<EnrollmentDetailDto>> getOwnEnrollment(
-            @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
             @PathVariable("enrollmentId") UUID enrollmentId
     ) {
         return ResponseEntity.ok(
@@ -142,7 +145,7 @@ public class EnrollmentController {
     @PostMapping("/me/{enrollmentId}/items")
     @CheckPermission("ENROLLMENT_ADD_COURSE_SELF")
     public ResponseEntity<ApiResponse<EnrollmentItemDto>> addOwnEnrollmentItem(
-            @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
             @PathVariable("enrollmentId") UUID enrollmentId,
             @Valid @RequestBody AddEnrollmentItemRequest request
     ) {
@@ -157,7 +160,7 @@ public class EnrollmentController {
     @GetMapping("/me/{enrollmentId}/available-course-offerings")
     @CheckPermission("ENROLLMENT_READ_SELF")
     public ResponseEntity<ApiResponse<List<CourseOfferingDto>>> getAvailableCourseOfferings(
-            @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
             @PathVariable("enrollmentId") UUID enrollmentId,
             @RequestParam(name = "page", defaultValue = "0") @Min(0) Integer page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) Integer size
@@ -171,7 +174,7 @@ public class EnrollmentController {
     @DeleteMapping("/me/{enrollmentId}/items/{itemId}")
     @CheckPermission("ENROLLMENT_REMOVE_COURSE_SELF")
     public ResponseEntity<ApiResponse<Void>> removeOwnEnrollmentItem(
-            @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
             @PathVariable("enrollmentId") UUID enrollmentId,
             @PathVariable("itemId") UUID itemId
     ) {

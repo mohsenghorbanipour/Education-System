@@ -1,5 +1,7 @@
 package com.edu.com.course.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.annotations.CheckPermission;
 import com.edu.com.common.filter.JwtFilter;
 import com.edu.com.course.service.CatalogAccess;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Course offerings")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/course-offerings")
@@ -52,7 +55,7 @@ public class CourseOfferingController {
     @GetMapping
     @CheckPermission("COURSE_OFFERING_READ")
     public ResponseEntity<ApiResponse<List<CourseOfferingDto>>> getCourseOfferings(
-            @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
             @RequestParam(name = "semesterId", required = false) UUID semesterId,
             @RequestParam(name = "page", defaultValue = "0") @Min(0) Integer page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) Integer size
@@ -69,7 +72,7 @@ public class CourseOfferingController {
     @GetMapping("/{courseOfferingId}")
     @CheckPermission("COURSE_OFFERING_READ")
     public ResponseEntity<ApiResponse<CourseOfferingDto>> getCourseOffering(
-            @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
             @PathVariable("courseOfferingId") UUID courseOfferingId
     ) {
         CatalogAccess.requireUnrestrictedAccess(currentUser);

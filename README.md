@@ -207,6 +207,33 @@ Student accounts cannot use the general course or offering list/detail endpoints
 
 ## API reference
 
+### Interactive Swagger documentation
+
+- Local UI: `http://localhost:8080/swagger-ui/index.html`
+- Public UI after deploying the application and updated Nginx configuration: `https://api.mohsendev20.ir/swagger-ui/index.html`
+- OpenAPI JSON: `/v3/api-docs`
+
+Expand **Authentication → Login**, select **Try it out**, and submit your own
+application credentials. Copy `data.token`, click **Authorize**, and paste the
+JWT without the `Bearer` prefix. You can then execute protected requests using
+your account's permissions. Authorization is not persisted across page reloads.
+The UI uses the current site's origin, so local testing stays local and the
+public UI targets the server. Executing write operations changes that database.
+
+Request/response schemas and validation constraints are generated from the
+controllers and DTOs. Required permissions are included in operation descriptions;
+server-injected current-user arguments are hidden. Documentation is public, while
+API authentication, permission checks, and ownership rules remain enforced.
+
+See [Swagger deployment instructions](deploy/PUBLIC_API.md#swagger-ui) for the
+one-time Nginx update; deploying a JAR does not update Nginx files.
+
+For remote frontend development, follow the [public HTTPS API guide](deploy/PUBLIC_API.md).
+The API's CORS configuration allows `http://localhost:5173` by default and can
+be changed with the comma-separated `CORS_ALLOWED_ORIGINS` environment variable.
+Preflight requests are handled before JWT authentication; actual requests
+still require the permissions listed below.
+
 All paths below are relative to `/api/v1`. Bodies and responses use JSON. Resource IDs are UUIDs. Creation endpoints return `201 Created`; successful reads, updates, login, and deletes return `200 OK`. Deletes return a response envelope with a message.
 
 List endpoints accept zero-based `page` and `size` parameters. Defaults are `page=0` and `size=20`; `size` must be between 1 and 100. Results are returned as arrays in `data`, without total-count or total-page metadata.
@@ -539,7 +566,15 @@ With PostgreSQL running and the environment configured as above:
 ./mvnw clean verify
 ```
 
-The test currently checked into this repository is `EducationSystemApplicationTests`, an application-context smoke test. It loads the configured application and requires a reachable PostgreSQL database; Flyway runs as part of startup. Use a separate development or test database for this command.
+`EducationSystemApplicationTests` is an application-context smoke test. It loads the configured application and requires a reachable PostgreSQL database; Flyway runs as part of startup. Use a separate development or test database for this command. `FilterConfigTests` checks browser preflight handling, origin/header restrictions, and JWT authentication with CORS response headers, without a database.
+
+`OpenApiTests` starts an HTTP server on a random port and verifies documentation, UI assets, JWT security metadata, hidden server-side parameters, validation schemas, and authentication enforcement. It also requires a separate PostgreSQL test database.
+
+To run only the CORS and filter-chain tests:
+
+```bash
+./mvnw -Dtest=FilterConfigTests test
+```
 
 To package without executing tests:
 
@@ -567,6 +602,6 @@ configure the four Actions secrets, and publish a release.
 
 ## Current scope
 
-This repository provides the backend API. Role and permission data are seeded in the database; dedicated management endpoints for them are not implemented. Some seeded permissions represent future operations and do not imply an existing endpoint. There is no frontend, generated Swagger/OpenAPI UI, refresh-token flow, or password-change endpoint in the current codebase.
+This repository provides the backend API. Role and permission data are seeded in the database; dedicated management endpoints for them are not implemented. Some seeded permissions represent future operations and do not imply an existing endpoint. There is no frontend, refresh-token flow, or password-change endpoint in the current codebase.
 
 Semester dates describe academic terms; the current selection logic does not enforce registration deadlines, timetables, prerequisites, or grading rules. The implemented rules are the plan, ownership, semester, duplicate-course, major, and capacity checks documented above.

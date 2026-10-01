@@ -1,5 +1,7 @@
 package com.edu.com.course.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.annotations.CheckPermission;
 import com.edu.com.common.filter.JwtFilter;
 import com.edu.com.course.service.CatalogAccess;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Courses")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/courses")
@@ -52,7 +55,7 @@ public class CourseController {
     @GetMapping
     @CheckPermission("COURSE_READ")
     public ResponseEntity<ApiResponse<List<CourseDto>>> getCourses(
-            @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
             @RequestParam(name = "page", defaultValue = "0") @Min(0) Integer page,
             @RequestParam(name = "size", defaultValue = "20") @Min(1) @Max(100) Integer size
     ) {
@@ -68,7 +71,7 @@ public class CourseController {
     @GetMapping("/{courseId}")
     @CheckPermission("COURSE_READ")
     public ResponseEntity<ApiResponse<CourseDto>> getCourse(
-            @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(value = JwtFilter.CURRENT_USER, required = false) UserDto currentUser,
             @PathVariable("courseId") UUID courseId
     ) {
         CatalogAccess.requireUnrestrictedAccess(currentUser);

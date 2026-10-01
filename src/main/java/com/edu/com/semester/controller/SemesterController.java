@@ -1,5 +1,6 @@
 package com.edu.com.semester.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.annotations.CheckPermission;
 import com.edu.com.common.response.ApiResponse;
 import com.edu.com.semester.dto.SemesterDto;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Semesters")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/semesters")

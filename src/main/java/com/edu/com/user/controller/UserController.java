@@ -1,5 +1,7 @@
 package com.edu.com.user.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.filter.JwtFilter;
 import com.edu.com.common.response.ApiResponse;
 import com.edu.com.common.annotations.CheckPermission;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Users")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
@@ -94,7 +97,7 @@ public class UserController {
     @PatchMapping("/me/profile")
     @CheckPermission("PROFILE_UPDATE_SELF")
     public ResponseEntity<ApiResponse<UserDto>> updateOwnUser(
-            @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
+            @Parameter(hidden = true) @RequestAttribute(JwtFilter.CURRENT_USER) UserDto currentUser,
             @Valid @RequestBody UpdateProfileRequest request
     ) {
         return ResponseEntity.ok(

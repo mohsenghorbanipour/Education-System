@@ -1,5 +1,8 @@
 # Deploying the education system
 
+For a frontend developer to access the API over the internet, continue with
+the [public HTTPS API guide](PUBLIC_API.md) after completing this deployment setup.
+
 This guide continues the manual Ubuntu 24.04 setup: Java 21, PostgreSQL 17,
 the `education` service account, a working `education-system.service`, and
 `/opt/education-system/app.jar` are already installed. The service reads

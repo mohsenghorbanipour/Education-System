@@ -1,5 +1,6 @@
 package com.edu.com.user.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.edu.com.common.response.ApiResponse;
 import com.edu.com.user.dto.request.LoginRequest;
 import com.edu.com.user.dto.response.UserDto;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "Authentication")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")

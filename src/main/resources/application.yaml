@@ -21,3 +21,16 @@ spring:
 jwt:
   secret: ymr2v5bqQtIaC+0MxkMKSHCNZsMYlYOXoTQWYLGDMMTn9FFXmvHm9r6dfX8LsVI+GwQpD8FwIK/J4syCHzyEVg==
   expirationMS: 3600000
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+springdoc:
+  paths-to-match: /api/v1/**
+  override-with-generic-response: false
+  swagger-ui:
+    disable-swagger-default-url: true
+    persist-authorization: false
+    operations-sorter: alpha
+    tags-sorter: alpha
