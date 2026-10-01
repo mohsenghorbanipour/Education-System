@@ -320,3 +320,22 @@ The documentation routes are public; protected APIs still require JWT and
 permissions. `/actuator/health` remains inaccessible through Nginx.
 If the UI returns 404, check both the deployed application version and the
 installed Nginx configuration. If API calls return 401, obtain a fresh token.
+
+### HTTPS proxy and CORS
+
+The application uses `server.forward-headers-strategy: native` so Tomcat processes
+Nginx's `X-Forwarded-Proto` before the CORS filter. Without this, an HTTPS Swagger
+POST can appear cross-origin because the internal Nginx-to-Java connection uses
+HTTP, producing `403 Invalid CORS request` before login validation.
+
+For an already deployed JAR, set this in `/etc/education-system/app.env`:
+
+```text
+SERVER_FORWARD_HEADERS_STRATEGY=native
+```
+
+Then restart `education-system` and check its loopback health endpoint. This
+setting takes effect without rebuilding the JAR. Keep Java bound to loopback
+and keep Nginx overwriting `Host`, `X-Forwarded-For`, and `X-Forwarded-Proto` as
+configured. Same-origin Swagger requests do not need an extra allowed CORS
+origin; cross-origin frontend requests still use `CORS_ALLOWED_ORIGINS`.

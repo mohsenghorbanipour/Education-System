@@ -8,6 +8,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
+import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -77,6 +79,37 @@ class OpenApiTests {
     private HttpResponse<String> get(String path) throws Exception {
         return client.send(HttpRequest.newBuilder(uri(path)).timeout(Duration.ofSeconds(20)).GET().build(),
                 HttpResponse.BodyHandlers.ofString());
+    }
+
+    @Test
+    void acceptsSwaggerLoginFromSameHttpsOriginBehindNginx() throws Exception {
+        String response = proxiedLogin("https://api.mohsendev20.ir");
+        assertThat(response).startsWith("HTTP/1.1 400");
+        assertThat(response).doesNotContain("Invalid CORS request");
+    }
+
+    @Test
+    void keepsFrontendOriginAllowedAndUntrustedOriginsBlockedBehindNginx() throws Exception {
+        assertThat(proxiedLogin("http://localhost:5173")).startsWith("HTTP/1.1 400");
+        assertThat(proxiedLogin("https://untrusted.example")).startsWith("HTTP/1.1 403")
+                .contains("Invalid CORS request");
+    }
+
+    private String proxiedLogin(String origin) throws Exception {
+        try (Socket socket = new Socket("127.0.0.1", port)) {
+            socket.setSoTimeout(20000);
+            String request = "POST /api/v1/auth/login HTTP/1.1\r\n"
+                    + "Host: api.mohsendev20.ir\r\n"
+                    + "Origin: " + origin + "\r\n"
+                    + "X-Forwarded-Proto: https\r\n"
+                    + "X-Forwarded-For: 203.0.113.10\r\n"
+                    + "Content-Type: application/json\r\n"
+                    + "Content-Length: 2\r\n"
+                    + "Connection: close\r\n\r\n{}";
+            socket.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
+            socket.getOutputStream().flush();
+            return new String(socket.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
     private URI uri(String path) {

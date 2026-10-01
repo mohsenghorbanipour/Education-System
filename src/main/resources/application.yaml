@@ -1,3 +1,8 @@
+server:
+  forward-headers-strategy: native
+  tomcat:
+    redirect-context-root: false
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5433/university_db
